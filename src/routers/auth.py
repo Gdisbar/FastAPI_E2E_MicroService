@@ -53,9 +53,9 @@ def authenticated_users(username:str,password:str,db:db_dependency):
         return False
     return user
 
-def create_access_token(username:str,user_id:int,expires_delta:timedelta):
-    # Create payload with username and user_id
-    encode = {'sub':username,'user_id':user_id}
+def create_access_token(username:str,user_id:int,role:str,expires_delta:timedelta):
+    # Create payload with username,user_id and role
+    encode = {'sub':username,'user_id':user_id,'role':role}
     # Set JWT expiry time
     expires = datetime.now(timezone.utc)+expires_delta
     encode.update({'exp': expires})
@@ -70,11 +70,12 @@ async def get_current_user(token:Annotated[str,Depends(oauth2_bearer)]):
         # Extract username and user_id from payload
         username:Optional[str] = payload.get('sub')
         user_id:Optional[int] = payload.get('user_id')
+        user_role:Optional[str] = payload.get('role')
         # Validate that both username and user_id exist
         if username is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail='Could not validate user.')
-        return {"username":username,"user_id":user_id}
+        return {"username":username,"user_id":user_id,"user_role":user_role}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail='Could not validate user.')
@@ -116,6 +117,7 @@ async def login_for_access_token(form_data:Annotated[OAuth2PasswordRequestFormSt
     # user.id is passed here and encoded as 'user_id' in the JWT
     user_name = str(user.username)
     user_id   = int(user.id)
-    token = create_access_token(user_name,user_id,timedelta(minutes=20))
+    user_role = str(user.role)
+    token = create_access_token(user_name,user_id,user_role,timedelta(minutes=20))
     # Return token in OAuth2 format
     return {'access_token': token, 'token_type': 'bearer'}
