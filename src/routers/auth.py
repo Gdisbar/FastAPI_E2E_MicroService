@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from models import Users
 from passlib.context import CryptContext
 from database import SessionLocal
-from typing import Annotated
+from typing import Annotated,Optional
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, Path
 from starlette import status
@@ -48,21 +48,29 @@ def authenticated_users(username:str,password:str,db:db_dependency):
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
         return False
-    if not bcrypt_context.verify(password,user.hashed_password):
+    # might get conversion waring : Column[str]
+    if not bcrypt_context.verify(password,str(user.hashed_password)):
         return False
     return user
 
 def create_access_token(username:str,user_id:int,expires_delta:timedelta):
-    encode = {'sub':username,'id':user_id}
+    # Create payload with username and user_id
+    encode = {'sub':username,'user_id':user_id}
+    # Set JWT expiry time
     expires = datetime.now(timezone.utc)+expires_delta
     encode.update({'exp': expires})
+    # Encode and return JWT token
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
+# Dependency to get current authenticated user from JWT token
 async def get_current_user(token:Annotated[str,Depends(oauth2_bearer)]):
     try:
+        # Decode JWT token
         payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-        username:str = payload.get('sub')
-        user_id:int = payload.get('id')
+        # Extract username and user_id from payload
+        username:Optional[str] = payload.get('sub')
+        user_id:Optional[int] = payload.get('user_id')
+        # Validate that both username and user_id exist
         if username is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail='Could not validate user.')
@@ -74,6 +82,7 @@ async def get_current_user(token:Annotated[str,Depends(oauth2_bearer)]):
 @router.post("/",status_code=status.HTTP_201_CREATED)
 async def create_user(db:db_dependency,
                       create_user_request:CreateUserRequest):
+    # Create user model instance with hashed password
     create_user_model = Users(
         email=create_user_request.email,
         username=create_user_request.user_name,
@@ -94,12 +103,19 @@ async def get_all_users(db:db_dependency):
         raise HTTPException(status_code=404, detail="No user found")
     return users
 
+# Login endpoint that returns JWT access token
 @router.post("/token")
 async def login_for_access_token(form_data:Annotated[OAuth2PasswordRequestFormStrict,Depends()],
                                  db:db_dependency):
+    # Authenticate user with username and password
     user = authenticated_users(form_data.username,form_data.password,db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Could not validate user.')
-    token = create_access_token(user.username,user.id,timedelta(minutes=20))
+    # Create access token with 20 minute expiration
+    # user.id is passed here and encoded as 'user_id' in the JWT
+    user_name = str(user.username)
+    user_id   = int(user.id)
+    token = create_access_token(user_name,user_id,timedelta(minutes=20))
+    # Return token in OAuth2 format
     return {'access_token': token, 'token_type': 'bearer'}
