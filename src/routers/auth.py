@@ -1,8 +1,11 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from models import Users
-from passlib.context import CryptContext
 from database import SessionLocal
+from models import Users
+# from src.database import SessionLocal
+# from src.models import Users
+
+from passlib.context import CryptContext
 from typing import Annotated,Optional
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, Path

@@ -1,7 +1,11 @@
 from database import engine
-from fastapi import FastAPI
 from models import Base
 from routers import auth,todos,admin
+# from src.models import Base
+# from src.routers import auth, todos, admin
+# from src.database import engine
+
+from fastapi import FastAPI
 
 app = FastAPI()
 

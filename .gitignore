@@ -1,3 +1,6 @@
 # Ignore venv files & Bytecode
 virtualenv/
 __pycache__/
+
+# Ignore environment variabales
+.env
