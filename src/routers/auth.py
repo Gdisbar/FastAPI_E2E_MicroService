@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from database import SessionLocal
-from models import Users
-# from src.database import SessionLocal
-# from src.models import Users
+# from database import SessionLocal
+# from models import Users
+from src.database import SessionLocal
+from src.models import Users
 
 from passlib.context import CryptContext
 from typing import Annotated,Optional
@@ -119,7 +119,7 @@ async def login_for_access_token(form_data:Annotated[OAuth2PasswordRequestFormSt
     # Create access token with 20 minute expiration
     # user.id is passed here and encoded as 'user_id' in the JWT
     user_name = str(user.username)
-    user_id   = int(user.id)
+    user_id   = int(user.id)  # type: ignore
     user_role = str(user.role)
     token = create_access_token(user_name,user_id,user_role,timedelta(minutes=20))
     # Return token in OAuth2 format

@@ -5,15 +5,16 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 
-env_path = Path(__file__).parent / '.env'
-load_dotenv(dotenv_path=env_path)
+# env_path = Path(__file__).parent / '.env'
+# load_dotenv(dotenv_path=env_path)
+load_dotenv()
 
 DB_USERNAME=os.getenv("DB_USERNAME")
 DB_PASSWORD=os.getenv("DB_PASSWORD")
 DB_DATABASE=os.getenv("DB_DATABASE")
 DB_HOST=os.getenv("DB_HOST")
 
-print(f"Connected to : {DB_DATABASE}")
+print(f"======== Connected to : {DB_DATABASE} DB ===========")
 
 SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}"
 

@@ -1,10 +1,9 @@
-from database import SessionLocal
-from models import Todos
-# from src.database import SessionLocal
-# from src.models import Todos
+# from database import SessionLocal
+# from models import Todos
+from src.database import SessionLocal
+from src.models import Todos
 from fastapi import APIRouter
 from typing import Annotated,Dict
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, Path
 from starlette import status
